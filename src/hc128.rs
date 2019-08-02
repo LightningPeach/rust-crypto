@@ -39,14 +39,14 @@ impl Hc128 {
         let mut w : [u32; 1280] = [0; 1280];
 
         for i in 0..16 {
-            w[i >> 2] |= (key[i] as u32) << (8 * (i & 0x3));
+            w[i >> 2] |= (key[i] as u32) << (8 * (i as u32 & 0x3));
         }
         unsafe {
             ptr::copy_nonoverlapping(w.as_ptr(), w.as_mut_ptr().offset(4), 4);
         }
 
         for i in 0..nonce.len() & 16 {
-            w[(i >> 2) + 8] |= (nonce[i] as u32) << (8 * (i & 0x3));
+            w[(i >> 2) + 8] |= (nonce[i] as u32) << (8 * (i as u32 & 0x3));
         }
         unsafe {
             ptr::copy_nonoverlapping(w.as_ptr().offset(8), w.as_mut_ptr().offset(12), 4);
@@ -182,18 +182,17 @@ impl Decryptor for Hc128 {
 mod test {
     use hc128::Hc128;
     use symmetriccipher::SynchronousStreamCipher;
-    use serialize::hex::{FromHex};
 
     // Vectors from http://www.ecrypt.eu.org/stream/svn/viewcvs.cgi/ecrypt/trunk/submissions/hc-256/hc-128/verified.test-vectors?rev=210&view=markup
 
     #[test]
     fn test_hc128_ecrypt_set_2_vector_0() {
-        let key = "00000000000000000000000000000000".from_hex().unwrap();
-        let nonce = "00000000000000000000000000000000".from_hex().unwrap();
+        let key = hex::decode("00000000000000000000000000000000").ok().unwrap();
+        let nonce = hex::decode("00000000000000000000000000000000").ok().unwrap();
 
         let input = [0u8; 64];
         let expected_output_hex = "82001573A003FD3B7FD72FFB0EAF63AAC62F12DEB629DCA72785A66268EC758B1EDB36900560898178E0AD009ABF1F491330DC1C246E3D6CB264F6900271D59C";
-        let expected_output = expected_output_hex.from_hex().unwrap();
+        let expected_output = hex::decode(expected_output_hex).ok().unwrap();
 
         let mut output = [0u8; 64];
 
@@ -205,12 +204,12 @@ mod test {
 
     #[test]
     fn test_hc128_ecrypt_set_6_vector_1() {
-        let key = "0558ABFE51A4F74A9DF04396E93C8FE2".from_hex().unwrap();
-        let nonce = "167DE44BB21980E74EB51C83EA51B81F".from_hex().unwrap();
+        let key = hex::decode("0558ABFE51A4F74A9DF04396E93C8FE2").ok().unwrap();
+        let nonce = hex::decode("167DE44BB21980E74EB51C83EA51B81F").ok().unwrap();
 
         let input = [0u8; 64];
         let expected_output_hex = "4F864BF3C96D0363B1903F0739189138F6ED2BC0AF583FEEA0CEA66BA7E06E63FB28BF8B3CA0031D24ABB511C57DD17BFC2861C32400072CB680DF2E58A5CECC";
-        let expected_output = expected_output_hex.from_hex().unwrap();
+        let expected_output = hex::decode(expected_output_hex).ok().unwrap();
 
         let mut output = [0u8; 64];
 
@@ -223,12 +222,12 @@ mod test {
 
     #[test]
     fn test_hc128_ecrypt_set_6_vector_2() {
-        let key = "0A5DB00356A9FC4FA2F5489BEE4194E7".from_hex().unwrap();
-        let nonce = "1F86ED54BB2289F057BE258CF35AC128".from_hex().unwrap();
+        let key = hex::decode("0A5DB00356A9FC4FA2F5489BEE4194E7").ok().unwrap();
+        let nonce = hex::decode("1F86ED54BB2289F057BE258CF35AC128").ok().unwrap();
 
         let input = [0u8; 64];
         let expected_output_hex = "82168AB0023B79AAF1E6B4D823855E14A7084378036A951B1CFEF35173875ED86CB66AB8410491A08582BE40080C3102193BA567F9E95D096C3CC60927DD7901";
-        let expected_output = expected_output_hex.from_hex().unwrap();
+        let expected_output = hex::decode(expected_output_hex).ok().unwrap();
 
         let mut output = [0u8; 64];
 
@@ -241,12 +240,12 @@ mod test {
 
     #[test]
     fn test_hc128_ecrypt_set_6_vector_3() {
-        let key = "0F62B5085BAE0154A7FA4DA0F34699EC".from_hex().unwrap();
-        let nonce = "288FF65DC42B92F960C72E95FC63CA31".from_hex().unwrap();
+        let key = hex::decode("0F62B5085BAE0154A7FA4DA0F34699EC").ok().unwrap();
+        let nonce = hex::decode("288FF65DC42B92F960C72E95FC63CA31").ok().unwrap();
 
         let input = [0u8; 64];
         let expected_output_hex = "1CD8AEDDFE52E217E835D0B7E84E2922D04B1ADBCA53C4522B1AA604C42856A90AF83E2614BCE65C0AECABDD8975B55700D6A26D52FFF0888DA38F1DE20B77B7";
-        let expected_output = expected_output_hex.from_hex().unwrap();
+        let expected_output = hex::decode(expected_output_hex).ok().unwrap();
 
         let mut output = [0u8; 64];
 

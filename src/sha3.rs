@@ -94,12 +94,12 @@ const M5: [usize; 10] = [
 
 #[inline]
 fn rotl64(v: u64, n: usize) -> u64 {
-    ((v << (n % 64)) & 0xffffffffffffffff) ^ (v >> (64 - (n % 64)))
+    ((v << ((n as u64) % 64)) & 0xffffffffffffffff) ^ (v >> (64 - ((n as u64) % 64)))
 }
 
 // Code based on Keccak-compact64.c from ref implementation.
 fn keccak_f(state: &mut [u8]) {
-    assert!(state.len() == B);
+    assert_eq!(state.len(), B);
 
     let mut s: [u64; 25] = [0; 25];
     let mut t: [u64; 1] = [0; 1];
@@ -314,8 +314,8 @@ impl Sha3 {
             assert!(buf.len() as f32 >= ((offset + 2) as f32 / 8.0).ceil());
             let s = offset / 8;
             let buflen = buf.len();
-            buf[s] |= 1 << (offset % 8);
-            for i in (offset % 8) + 1..8 {
+            buf[s] |= 1 << ((offset as u8) % 8);
+            for i in ((offset as u8) % 8) + 1..8 {
                 buf[s] &= !(1 << i);
             }
             for i in s + 1..buf.len() {
@@ -459,7 +459,6 @@ impl Clone for Sha3 {
 mod tests {
     use digest::Digest;
     use sha3::{Sha3, Sha3Mode};
-    use serialize::hex::{FromHex, ToHex};
 
     struct Test {
         input: &'static str,
@@ -469,13 +468,13 @@ mod tests {
     fn test_hash<D: Digest>(sh: &mut D, tests: &[Test]) {
         // Test that it works when accepting the message all at once
         for t in tests.iter() {
-            sh.input(&t.input.from_hex().unwrap());
+            sh.input(&hex::decode(t.input).ok().unwrap());
 
             let mut out_str = vec![0u8; t.output_str.len() / 2];
 
             sh.result(&mut out_str);
-            println!("{}", &out_str.to_hex());
-            assert!(&out_str.to_hex() == t.output_str);
+            println!("{}", &hex::encode(&out_str));
+            assert!(&hex::encode(&out_str) == t.output_str);
 
             sh.reset();
         }
@@ -486,7 +485,7 @@ mod tests {
             let mut left = len;
             while left > 0 {
                 let take = (left + 1) / 2;
-                sh.input(&t.input.from_hex().unwrap()[len - left..take + len - left]);
+                sh.input(&hex::decode(t.input).ok().unwrap()[len - left..take + len - left]);
                 left = left - take;
             }
 
@@ -494,7 +493,7 @@ mod tests {
 
             sh.result(&mut out_str);
 
-            assert!(&out_str.to_hex() == t.output_str);
+            assert!(&hex::encode(out_str) == t.output_str);
 
             sh.reset();
         }

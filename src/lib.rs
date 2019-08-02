@@ -5,9 +5,11 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "with-bench", feature(test))]
+#![cfg_attr(target_arch = "wasm32", feature(core_intrinsics))]
 
 extern crate rand;
-extern crate rustc_serialize as serialize;
+extern crate base64;
+extern crate hex;
 extern crate time;
 extern crate libc;
 

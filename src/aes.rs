@@ -11,6 +11,8 @@ use aessafe;
 use blockmodes::{PaddingProcessor, EcbEncryptor, EcbDecryptor, CbcEncryptor, CbcDecryptor, CtrMode,
     CtrModeX8};
 use symmetriccipher::{Encryptor, Decryptor, SynchronousStreamCipher};
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 use util;
 
 /// AES key size
@@ -26,7 +28,7 @@ pub enum KeySize {
 pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
-        padding: X) -> Box<Encryptor> {
+        padding: X) -> Box<dyn Encryptor> {
     if util::supports_aesni() {
         let aes_enc = aesni::AesNiEncryptor::new(key_size, key);
         let enc = Box::new(EcbEncryptor::new(aes_enc, padding));
@@ -57,7 +59,7 @@ pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
 pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
-        padding: X) -> Box<Encryptor> {
+        padding: X) -> Box<dyn Encryptor> {
     match key_size {
         KeySize::KeySize128 => {
             let aes_enc = aessafe::AesSafe128Encryptor::new(key);
@@ -82,7 +84,7 @@ pub fn ecb_encryptor<X: PaddingProcessor + Send + 'static>(
 pub fn ecb_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
-        padding: X) -> Box<Decryptor> {
+        padding: X) -> Box<dyn Decryptor> {
     if util::supports_aesni() {
         let aes_dec = aesni::AesNiDecryptor::new(key_size, key);
         let dec = Box::new(EcbDecryptor::new(aes_dec, padding));
@@ -113,7 +115,7 @@ pub fn ecb_decryptor<X: PaddingProcessor + Send + 'static>(
 pub fn ecb_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
-        padding: X) -> Box<Decryptor> {
+        padding: X) -> Box<dyn Decryptor> {
     match key_size {
         KeySize::KeySize128 => {
             let aes_dec = aessafe::AesSafe128Decryptor::new(key);
@@ -139,7 +141,7 @@ pub fn cbc_encryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
         iv: &[u8],
-        padding: X) -> Box<Encryptor + 'static> {
+        padding: X) -> Box<dyn Encryptor + 'static> {
     if util::supports_aesni() {
         let aes_enc = aesni::AesNiEncryptor::new(key_size, key);
         let enc = Box::new(CbcEncryptor::new(aes_enc, padding, iv.to_vec()));
@@ -171,7 +173,7 @@ pub fn cbc_encryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
         iv: &[u8],
-        padding: X) -> Box<Encryptor + 'static> {
+        padding: X) -> Box<dyn Encryptor + 'static> {
     match key_size {
         KeySize::KeySize128 => {
             let aes_enc = aessafe::AesSafe128Encryptor::new(key);
@@ -197,7 +199,7 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
         iv: &[u8],
-        padding: X) -> Box<Decryptor + 'static> {
+        padding: X) -> Box<dyn Decryptor + 'static> {
     if util::supports_aesni() {
         let aes_dec = aesni::AesNiDecryptor::new(key_size, key);
         let dec = Box::new(CbcDecryptor::new(aes_dec, padding, iv.to_vec()));
@@ -229,22 +231,22 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send + 'static>(
         key_size: KeySize,
         key: &[u8],
         iv: &[u8],
-        padding: X) -> Box<Decryptor + 'static> {
+        padding: X) -> Box<dyn Decryptor + 'static> {
     match key_size {
         KeySize::KeySize128 => {
             let aes_dec = aessafe::AesSafe128Decryptor::new(key);
             let dec = Box::new(CbcDecryptor::new(aes_dec, padding, iv.to_vec()));
-            dec as Box<Decryptor + 'static>
+            dec as Box<dyn Decryptor + 'static>
         }
         KeySize::KeySize192 => {
             let aes_dec = aessafe::AesSafe192Decryptor::new(key);
             let dec = Box::new(CbcDecryptor::new(aes_dec, padding, iv.to_vec()));
-            dec as Box<Decryptor + 'static>
+            dec as Box<dyn Decryptor + 'static>
         }
         KeySize::KeySize256 => {
             let aes_dec = aessafe::AesSafe256Decryptor::new(key);
             let dec = Box::new(CbcDecryptor::new(aes_dec, padding, iv.to_vec()));
-            dec as Box<Decryptor + 'static>
+            dec as Box<dyn Decryptor + 'static>
         }
     }
 }
@@ -254,7 +256,7 @@ pub fn cbc_decryptor<X: PaddingProcessor + Send + 'static>(
 pub fn ctr(
         key_size: KeySize,
         key: &[u8],
-        iv: &[u8]) -> Box<SynchronousStreamCipher + 'static> {
+        iv: &[u8]) -> Box<dyn SynchronousStreamCipher + 'static> {
     if util::supports_aesni() {
         let aes_dec = aesni::AesNiEncryptor::new(key_size, key);
         let dec = Box::new(CtrMode::new(aes_dec, iv.to_vec()));
@@ -285,22 +287,22 @@ pub fn ctr(
 pub fn ctr(
         key_size: KeySize,
         key: &[u8],
-        iv: &[u8]) -> Box<SynchronousStreamCipher + 'static> {
+        iv: &[u8]) -> Box<dyn SynchronousStreamCipher + 'static> {
     match key_size {
         KeySize::KeySize128 => {
             let aes_dec = aessafe::AesSafe128EncryptorX8::new(key);
             let dec = Box::new(CtrModeX8::new(aes_dec, iv));
-            dec as Box<SynchronousStreamCipher>
+            dec as Box<dyn SynchronousStreamCipher>
         }
         KeySize::KeySize192 => {
             let aes_dec = aessafe::AesSafe192EncryptorX8::new(key);
             let dec = Box::new(CtrModeX8::new(aes_dec, iv));
-            dec as Box<SynchronousStreamCipher>
+            dec as Box<dyn SynchronousStreamCipher>
         }
         KeySize::KeySize256 => {
             let aes_dec = aessafe::AesSafe256EncryptorX8::new(key);
             let dec = Box::new(CtrModeX8::new(aes_dec, iv));
-            dec as Box<SynchronousStreamCipher>
+            dec as Box<dyn SynchronousStreamCipher>
         }
     }
 }

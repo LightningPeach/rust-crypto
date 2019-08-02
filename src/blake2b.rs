@@ -70,6 +70,7 @@ struct Blake2bParam {
     personal: [u8; BLAKE2B_PERSONALBYTES],
 }
 
+#[allow(non_snake_case)]
 macro_rules! G( ($r:expr, $i:expr, $a:expr, $b:expr, $c:expr, $d:expr, $m:expr) => ({
     $a = $a.wrapping_add($b).wrapping_add($m[SIGMA[$r][2*$i+0]]);
     $d = ($d ^ $a).rotate_right(32);
@@ -392,8 +393,6 @@ mod digest_tests {
     //use cryptoutil::test::test_digest_1million_random;
     use blake2b::Blake2b;
     use digest::Digest;
-    use serialize::hex::FromHex;
-
 
     struct Test {
         input: Vec<u8>,
@@ -440,18 +439,18 @@ mod digest_tests {
             // Examples from wikipedia
             Test {
                 input: vec![],
-                output: "786a02f742015903c6c6fd852552d272\
-                         912f4740e15847618a86e217f71f5419\
-                         d25e1031afee585313896444934eb04b\
-                         903a685b1448b755d56f701afe9be2ce".from_hex().unwrap(),
+                output: hex::decode("786a02f742015903c6c6fd852552d272\
+                                     912f4740e15847618a86e217f71f5419\
+                                     d25e1031afee585313896444934eb04b\
+                                     903a685b1448b755d56f701afe9be2ce").ok().unwrap(),
                 key: None
             },
             Test {
                 input: "The quick brown fox jumps over the lazy dog".as_bytes().to_vec(),
-                output: "a8add4bdddfd93e4877d2746e62817b1\
-                         16364a1fa7bc148d95090bc7333b3673\
-                         f82401cf7aa2e4cb1ecd90296e3f14cb\
-                         5413f8ed77be73045b13914cdcd6a918".from_hex().unwrap(),
+                output: hex::decode("a8add4bdddfd93e4877d2746e62817b1\
+                                     16364a1fa7bc148d95090bc7333b3673\
+                                     f82401cf7aa2e4cb1ecd90296e3f14cb\
+                                     5413f8ed77be73045b13914cdcd6a918").ok().unwrap(),
                 key: None
             },
             // from: https://github.com/BLAKE2/BLAKE2/blob/master/testvectors/blake2b-test.txt

@@ -19,8 +19,6 @@ use std::mem::size_of;
 use cryptoutil::copy_memory;
 
 use rand::{OsRng, Rng};
-use serialize::base64;
-use serialize::base64::{FromBase64, ToBase64};
 
 use cryptoutil::{read_u32_le, read_u32v_le, write_u32_le};
 use hmac::Hmac;
@@ -170,7 +168,7 @@ impl ScryptParams {
         let r = r as usize;
         let p = p as usize;
 
-        let n: usize = 1 << log_n;
+        let n: usize = 1 << (log_n as usize);
 
         // check that r * 128 doesn't overflow
         let r128 = match r.checked_mul(128) {
@@ -227,7 +225,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &ScryptParams, output: &mut 
     assert!(output.len() / 32 <= 0xffffffff);
 
     // The checks in the ScryptParams constructor guarantee that the following is safe:
-    let n = 1 << params.log_n;
+    let n = (1 << params.log_n) as usize;
     let r128 = (params.r as usize) * 128;
     let pr128 = (params.p as usize) * r128;
     let nr128 = n * r128;
@@ -287,19 +285,19 @@ pub fn scrypt_simple(password: &str, params: &ScryptParams) -> io::Result<String
         tmp[0] = params.log_n;
         tmp[1] = params.r as u8;
         tmp[2] = params.p as u8;
-        result.push_str(&*tmp.to_base64(base64::STANDARD));
+        result.push_str(base64::encode_config(&tmp[..], base64::STANDARD).as_str());
     } else {
         result.push_str("1$");
         let mut tmp = [0u8; 9];
         tmp[0] = params.log_n;
         write_u32_le(&mut tmp[1..5], params.r);
         write_u32_le(&mut tmp[5..9], params.p);
-        result.push_str(&*tmp.to_base64(base64::STANDARD));
+        result.push_str(base64::encode_config(&tmp[..], base64::STANDARD).as_str());
     }
     result.push('$');
-    result.push_str(&*salt.to_base64(base64::STANDARD));
+    result.push_str(base64::encode_config(&salt[..], base64::STANDARD).as_str());
     result.push('$');
-    result.push_str(&*dk.to_base64(base64::STANDARD));
+    result.push_str(base64::encode_config(&dk[..], base64::STANDARD).as_str());
     result.push('$');
 
     Ok(result)
@@ -339,7 +337,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
             // Parse the parameters - the size of them depends on the if we are using the compact or
             // expanded format
             let pvec = match iter.next() {
-                Some(pstr) => match pstr.from_base64() {
+                Some(pstr) => match base64::decode(pstr) {
                     Ok(x) => x,
                     Err(_) => return Err(ERR_STR)
                 },
@@ -368,7 +366,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
 
     // Salt
     let salt = match iter.next() {
-        Some(sstr) => match sstr.from_base64() {
+        Some(sstr) => match base64::decode(sstr) {
             Ok(salt) => salt,
             Err(_) => return Err(ERR_STR)
         },
@@ -377,7 +375,7 @@ pub fn scrypt_check(password: &str, hashed_value: &str) -> Result<bool, &'static
 
     // Hashed value
     let hash = match iter.next() {
-        Some(hstr) => match hstr.from_base64() {
+        Some(hstr) => match base64::decode(hstr) {
             Ok(hash) => hash,
             Err(_) => return Err(ERR_STR)
         },

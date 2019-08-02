@@ -1157,13 +1157,13 @@ mod test {
                 D: Decryptor,
                 NewEncFunc: FnMut() -> E,
                 NewDecFunc: FnMut() -> D{
-        use rand;
         use rand::Rng;
+        use rand::SeedableRng;
 
         let tmp : &[_] = &[1, 2, 3, 4];
-        let mut rng1: rand::StdRng = rand::SeedableRng::from_seed(tmp);
-        let mut rng2: rand::StdRng = rand::SeedableRng::from_seed(tmp);
-        let mut rng3: rand::StdRng = rand::SeedableRng::from_seed(tmp);
+        let mut rng1: rand::StdRng = SeedableRng::from_seed(tmp);
+        let mut rng2: rand::StdRng = SeedableRng::from_seed(tmp);
+        let mut rng3: rand::StdRng = SeedableRng::from_seed(tmp);
         let max_size = cmp::max(test.get_plain().len(), test.get_cipher().len());
 
         let mut r1 = || {
